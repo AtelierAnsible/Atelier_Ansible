@@ -1,0 +1,5 @@
+---
+# variables appliquées à tous les groupes hosts
+
+httpd_port: 80
+ntpserver: 192.168.37.137

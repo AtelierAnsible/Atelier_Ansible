@@ -1,0 +1,26 @@
+---
+# Variables for the HAproxy configuration
+
+# HAproxy supprts "http" and "tcp". For SSL, SMTP, etc, USE "tcp".
+mode: http
+
+# Port on which HA^proxy should listen
+listenport: 8888
+
+# A name for the proxy deamon, this will be the suffix in the logs.
+deamonname: myapplb
+
+# Balancing Algorithm, Available option:
+# roundrobin, Source, leantconn, source, uri
+# (if persistance is required use, "source")
+balance: rounrobin
+
+# Ethernet interface on wich the load balancer should listen
+# Defaults to the firt interface. Change this to:
+#
+# iface: eth1
+#
+# ...to override.
+#
+iface: '{{ ansible_default_ipv4.interface }}'
+

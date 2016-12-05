@@ -1,0 +1,132 @@
+Ansible Vault est l'outil de chiffrement de fichiers d'Ansible. Lorsque vous travaillez avec des données sensibles, comme des clés d'accès ou des mots de passe, vous ne voulez probablement pas les stocker en texte brut n'importe où dans votre référentiel. Ansible Vault est un outil de ligne de commande pour crypter des fichiers à l'aide du chiffrement AES. Puisque AES est basé sur un secret partagé, vous devez fournir une clé secrète en créant le fichier et le même secret partagé lors de la tentative de lecture du fichier (par exemple, lors de l'exécution d'un playbook). Être capable de commettre vos secrets avec le reste de vos playbooks rend la vie agréable et facile pour tout le monde impliqué. Tout ce qu'ils ont besoin de faire est de prendre une copie des playbooks et de connaître le secret partagé pour pouvoir les exécuter.
+
+Créons un exemple simple qui utilise un fichier de variable chiffré comme source de données et qui crée un fichier sur le disque. Pour garder les choses propres, créons un nouveau playbook en exécutant les commandes suivantes:
+$ mkdir -p ansible-encrypted/roles
+$ cd ansible-encrypted
+$ touch Vagrantfile playbook.yml
+
+==> Editer le fichier Vagrantfile et ajouter le contenu suivant:
+Vagrant.configure(2) do |config|
+	config.vm.box = "ubuntu/trusty64"
+	config.vm.network "private_network", ip: "192.168.33.50"
+	config.vm.provision "ansible" do |ansible|
+		ansible.playbook = "playbook.yml"
+	end
+end
+
+==> Créer la playbook ansibleVault.yml en ajoutant le contenu suivant:
+---
+- hosts: all
+  roles:
+	- demo.ansibleVault 
+	
+Maintenant nous allons creer notre role demo.ansibleVault avec ansible-galaxy:
+$ cd roles
+$ ansible-galaxy init demo.ansibleVault
+- demo.ansibleVault was created successfully
+$ cd ..
+
+Nous allons rendre notre role opérationel:
+Ouvrer le fichier /roles/demo.ansibleVault/tasks/main.yml 
+Ajouter une tache (task) qui crée un fichier sur le disk :
+---
+- copy: content="{{test}}" dest=/tmp/encrypted_output
+
+Creer le fichier de variable roles/demo.ansibleVault/vars/main.yml
+---
+test: Hello, je dois proteger mon déploiement en prod avec ansible-vault
+
+$ ansible-playbook ansibleVault.yml
+
+	PLAY [all] *********************************************************************
+
+	TASK [setup] *******************************************************************
+	ok: [52.178.38.126]
+
+	TASK [demo.ansibleVault : copy] ************************************************
+	changed: [52.178.38.126]
+
+	PLAY RECAP *********************************************************************
+	52.178.38.126              : ok=2    changed=1    unreachable=0    failed=0
+
+	Playbook run took 0 days, 0 hours, 0 minutes, 2 seconds
+
+
+Nous allons encrypter le fichier des variables:
+$ ansible-vault encrypt /roles/demo.ansibleVault/vars/main.yml
+	New Vault password:
+	Confirm New Vault password:
+	Encryption successful
+
+Le fichier a été encrypter :
+$ cat roles/demo.ansibleVault/vars/main.yml
+	$ANSIBLE_VAULT;1.1;AES256
+	32326361313439336365353837363066333232326336383566643166633839396634346365336137
+	6362623864333332346630303861663531363831646136610a373862613766323662333734333830
+	35376633353037366537346431393064373136343433393262386330353037386666613762653365
+	3935386132633336640a333537393965656237393231313564323735333662326362353066613236
+	36346637663233353266653533653733643230393434306530346163633131323562393130633766
+	31626339646235386234386665613562386463613434393435613664643365643536343462323665
+	33333065336365343237656335323634333865383365353832326363366137303963383365396565
+	39303739663634343739396637376139393866623037643038616432363133653734373534656330
+	35643663343361633866653939336131663735613639383036636638373735623137313536616338
+	3661353034626362356235306430313732323336613966616536
+
+
+Rejouer la playbook, que remarquez-vous?
+$ ansible-playbook ansibleVault.yml
+ERROR! Decryption failed on /home/ansible/AtelierAnsible/Roles_apache_mysql_php_haproxy/roles/demo.ansibleVault/vars/main.yml
+
+Décryptage des données avec l'option --ask-vaul-tpass:
+$ ansible-playbook ansibleVault.yml --ask-vault-pass
+	Vault password:
+
+	PLAY [all] *********************************************************************
+
+	TASK [setup] *******************************************************************
+	ok: [52.178.38.126]
+
+	TASK [demo.ansibleVault : copy] ************************************************
+	ok: [52.178.38.126]
+
+	PLAY RECAP *********************************************************************
+	52.178.38.126              : ok=2    changed=0    unreachable=0    failed=0
+
+	Playbook run took 0 days, 0 hours, 0 minutes, 1 seconds
+
+
+Pour modifier la valeur de la variable test dans le fichier encrypté :
+$ ansible-vault edit roles/demo.ansibleVault/vars/main.yml
+Vault password:
+
+modifier la valeur test: Hello, j'ai compris tous compris avec ansible-vault
+
+Rejouer la playbook :
+$  ansible-playbook ansibleVault.yml --ask-vault-pass
+	Vault password:
+
+	PLAY [all] *********************************************************************
+
+	TASK [setup] *******************************************************************
+	ok: [52.178.38.126]
+
+	TASK [demo.ansibleVault : copy] ************************************************
+	changed: [52.178.38.126]
+
+	PLAY RECAP *********************************************************************
+	52.178.38.126              : ok=2    changed=1    unreachable=0    failed=0
+
+	Playbook run took 0 days, 0 hours, 0 minutes, 1 seconds
+
+
+
+
+Autres commandes ansible-vault:
+ansible-vault create   #Create a new encrypted file: ansible-vault create role/demo/vars/autres.yml
+ansible-vault encrypt  #Encrypt an existing file: ansible-vault encrypt role/demo/vars/main.yml
+ansible-vault decrypt  #Decrypt an existing encrypted file: ansible-vault decrypt role/demo/vars/main.yml
+ansible-vault edit     #Temporarily decrypt an encrypted file for editing: ansible-vault edit role/demo/vars/main.yml
+ansible-vault view     #Show the contents of an existing encrypted file: ansible-vault view role/demo/vars/main.yml
+ansible-vault rekey    #Change the key used to encrypt/decrypt an AnsibleVault – managed file: ansible-vault rekey  						     role/demo/vars/main.yml
+
+	

@@ -1,0 +1,144 @@
+Les exemples suivants montrent comment utiliser la commande "/usr/bin/ansible" pour exécuter des tâches ad-hoc.
+
+Qu'est-ce qu'une commande ad-hoc?
+
+Une commande ad hoc est une exécution des commande que vous pouvez taper pour faire quelque chose de vraiment rapide, mais que vous ne voulez pas enregistrer pour plus tard.
+
+C'est un bon endroit pour commencer à comprendre les bases de ce que Ansible peut faire avant d'apprendre le langage de playbooks - les commandes ad-hoc peuvent également être utilisées pour faire des choses rapides que vous pourriez ne pas vouloir nécessairement écrire dans un playbook complet.
+
+Allez, c'est parti ...
+
+Exécution des commande ansible en local:
+ansible all -i "localhost," -c local -m shell -a 'echo hello world'
+localhost | SUCCESS | rc=0 >>
+hello world
+
+Remarque : afin déviter de taper toutes les options "-i "localhost," -c local"
+=> ajouter cette ligne dans le fichier d'inventaire hosts "hostslocalhost ansible_connection=local"
+$ ansible all -m shell -a 'echo hello world’
+ocalhost | SUCCESS | rc=0 >>
+hello world
+
+Exécution à distance :
+Exécution des taches avec le module "shell"
+[ansible@DemoAnsible ~]$ ansible all -m shell -a "uname -a;df -h" -v
+Using /etc/ansible/ansible.cfg as config file
+52.178.38.126 | SUCCESS | rc=0 >>
+Linux AtelierAnsible 3.10.0-327.36.3.el7.x86_64 #1 SMP Mon Oct 24 16:09:20 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        30G  1.6G   29G   6% /
+devtmpfs        1.7G     0  1.7G   0% /dev
+tmpfs           1.7G     0  1.7G   0% /dev/shm
+tmpfs           1.7G  8.4M  1.7G   1% /run
+tmpfs           1.7G     0  1.7G   0% /sys/fs/cgroup
+/dev/sdb1       6.8G   32M  6.4G   1% /mnt/resource
+tmpfs           345M     0  345M   0% /run/user/1000
+tmpfs           345M     0  345M   0% /run/user/1007
+
+[ansible@DemoAnsible ~]$ ansible all -m shell -a "uptime"
+52.178.38.126 | SUCCESS | rc=0 >>
+ 15:04:09 up 21:09,  2 users,  load average: 0.16, 0.05, 0.06
+
+[ansible11@DemoAnsible ~]$ ansible all -m shell -a "free -m"
+52.178.38.126 | SUCCESS | rc=0 >>
+              total        used        free      shared  buff/cache   available
+Mem:           3440         207        2784           8         448        3004
+Swap:             0           0           0
+
+[ansible@DemoAnsible ~]$ ansible all -m shell -a "free -h" -v
+Using /etc/ansible/ansible.cfg as config file
+52.178.38.126 | SUCCESS | rc=0 >>
+              total        used        free      shared  buff/cache   available
+Mem:           3.4G        207M        2.7G        8.7M        448M        2.9G
+Swap:            0B          0B          0B
+
+Le module setup Liste toutes les informations de votre infra (servers)
+[ansible@DemoAnsible ~]$ ansible all -m setup
+
+[ansible@DemoAnsible ~]$ ansible all -m setup | more
+
+[ansible@DemoAnsible ~]$ ansible all -m setup > resultat_setup
+
+[ansible@DemoAnsible ~]$ ansible all -i -m setup -a 'filter=ansible_default_ipv4'
+52.178.38.126 | SUCCESS => {
+"ansible_facts": {
+"ansible_default_ipv4": {
+"address": "10.0.2.15",
+"alias": "eth0",
+"broadcast": "10.0.2.255",
+"gateway": "10.0.2.2",
+"interface": "eth0",
+"macaddress": "08:00:27:86:81:4f",
+"mtu": 1500,
+"netmask": "255.255.255.0",
+"network": "10.0.2.0",
+"type": "ether"
+}
+},
+"changed": false
+}
+
+Copie les fichiers et répertoires avec le module "copy"
+[ansible11@DemoAnsible AtelierAnsible]$ ansible all -m copy -a 'src=/tmp/test dest=/tmp/test'
+52.178.38.126 | SUCCESS => {
+    "changed": true,
+    "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "dest": "/tmp/test",
+    "gid": 1007,
+    "group": "ansible11",
+    "md5sum": "d41d8cd98f00b204e9800998ecf8427e",
+    "mode": "0664",
+    "owner": "ansible11",
+    "secontext": "unconfined_u:object_r:user_home_t:s0",
+    "size": 0,
+    "src": "/home/ansible11/.ansible/tmp/ansible-tmp-1480346402.98-36467012004012/source",
+    "state": "file",
+    "uid": 1007
+}
+
+[ansible@AtelierAnsible ~]$ ll /tmp/test
+-rw-rw-r--. 1 ansible ansible 0 Nov 28 15:25 /tmp/test
+
+Suppression du fichier test avec la commande "rm"
+[ansible@DemoAnsible AtelierAnsible]$ ansible all -m command -a 'rm -rf /tmp/test removes=/tmp/test'
+52.178.38.126 | SUCCESS | rc=0 >>
+
+Suppresion avec le module file :
+[ansible@DemoAnsible AtelierAnsible]$ ansible all -m file -a 'path=/tmp/test state=absent'
+52.178.38.126 | SUCCESS => {
+    "changed": true,
+    "path": "/tmp/test",
+    "state": "absent"
+}
+
+Example REDHAT/ Centos
+Installer un apache sur une machine
+$ ansible webservers -i hosts -u vagrant -m yum -a "name=httpd state=present"
+
+Supprimer Apache de la machine 
+$ ansible webservers -i hosts -u vagrant -m yum -a "name=httpd state=absent"
+
+  ===================================================
+    
+   /|\    
+  / ! \  Module help (documentation officielle d'ansible)
+  -----
+	Malheureusement, nous n'avons pas assez du temps pour pour couvrir tous les modules disponibles dans Ansible; cependant, Ansible nous propose une commande magique 'ansible-doc' qui peutr récupérer les informations d'aide. 
+	La commande ansible-doc vous permet également de voir une liste de tous les modules disponibles.
+	$ Ansible-doc -l
+	Pour afficher le fichier d'aide d'un module particulier, taper la commande suivante pour le module file par exemple :
+	$ ansible-doc file
+
+	Autre examples:
+	Installation d'un serveur ntp:
+	$ ansible all -s -m yum -a "name=ntp state=present"
+    Démarrage du service :
+    ansible all -s -m service -a "name=ntpd state=started enabled=yes"
+    $ ansible all -s -a "service ntpd stop"
+	$ ansible all -s -a "ntpdate -q 0.rhel.pool.ntp.org"
+	$ ansible all -s -a "service ntpd start"
+
+    Installation
+    $ ansible all -s -m yum -a "name=MySQL-python state=present"
+    $ ansible all -s -m yum -a "name=python-setuptools state=present"
+    $ ansible all -s -m easy_install -a "name=django"

@@ -1,0 +1,33 @@
+---
+- name: configuration commune de tous les serveurs
+  hosts: all
+  remote_user: admin
+  become: yes
+
+  roles:
+  - common
+
+- name: configure & deploy database servers
+  hosts: dbservers
+  remote_user: admin
+  become: yes
+
+  roles:
+  - db
+
+- name: configure & deploy web servers
+  hosts: webervers
+  remote_user: admin
+  become: yes
+
+  roles:
+  - apache
+  - web
+
+- name: configure & deploy the load balancer 
+  hosts: lbservers
+  remote_user: admin
+  become: yes
+
+  roles:
+  - haproxy

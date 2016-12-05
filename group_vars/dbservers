@@ -1,0 +1,9 @@
+---
+# the variable file used by the playbooks in the dbservers group.
+# Thes don't have to be explicitely imported by vars_files: they are autopopulated.
+
+mysqlservice: mysqld
+mysql_port: 3306
+dbname: demodb
+dbuser: root
+upassword: atelier

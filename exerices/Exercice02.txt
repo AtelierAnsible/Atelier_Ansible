@@ -1,0 +1,60 @@
+Ansible peut être utilisé comme outil de ligne de commande pour effectuer de petits changements. Cependant, la vraie puissance réside dans ses capacités de scripting. Pendant la mise en place des machines, nous avons presque toujours besoin de faire plusieurs action à la fois. Ansible utilise un concept nommé playbook pour faire cela. En utilisant des playbooks, nous pouvons effectuer plusieurs actions à la fois, et à travers plusieurs systèmes. Ils fournissent un moyen d'orchestrer les déploiements, d'assurer une configuration, ou tout simplement effectuer une tâche commune.
+Les manuels sont exprimés en YAML, et pour la plupart, Ansible utilise une norme
+YAML parser. Cela signifie que nous avons toutes les caractéristiques de YAML à notre disposition. Par exemple, nous pouvons utiliser le même système de commentaires dans le playbook
+Comme nous le ferions en YAML. 
+Voir http://www.yaml.org/ pour plus d'informations.
+
+Mon premier playbook s'appele hello.yml :)
+---
+- hosts: all
+  tasks:
+    - shell: echo "hello world"
+
+Exécution de la playbook:
+$ ansible-playbook -i "localhost," -c local helloworld.yml
+	PLAY [all] *********
+	GATHERING FACTS *********
+	ok: [localhost]
+	TASK: [shell echo "hello world"] *********
+	changed: [localhost]
+	PLAY RECAP *********
+	localhost                  : ok=2    changed=1    unreachable=0    failed=0   
+Remarque : afin déviter de taper toutes les options "-i "localhost," -c local"
+=> ajouter cette ligne dans le fichier d'inventaire hosts "hostslocalhost ansible_connection=local"
+
+$ ansible-playbook helloworld.yml
+
+Mon second playbook:
+---
+- hosts: webservers
+  remote_user: ansible
+  become: yes
+  vars:
+    hello: 'Welcome to Atelier Ansible'
+
+  tasks:
+    - name: Welcome
+      copy:
+        dest: /tmp/hello
+        content: "{{ hello }}"
+
+- Exécution de la playbook:
+[ansible@DemoAnsible AtelierAnsible]$ ansible-playbook hello.yml
+
+PLAY [all] *********************************************************************
+
+TASK [setup] *******************************************************************
+ok: [52.178.38.126]
+
+TASK [Welcome to Atelier Ansible] **********************************************
+changed: [52.178.38.126]
+
+PLAY RECAP *********************************************************************
+52.178.38.126              : ok=2    changed=1    unreachable=0    failed=0
+
+- Vérification de la bonne exécution de ma playbook 
+connectez vous sur le serveur cible : ssh ansible@52.178.38.126
+[ansible@AtelierAnsible tmp]$ cat /tmp/hello
+Welcome to Atelier Ansible
+
+

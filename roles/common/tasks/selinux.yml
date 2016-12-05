@@ -1,0 +1,11 @@
+---
+- name: Install python pour Selinux
+  yum: name={{item}} state=present
+  with_items:
+  - libselinux-python
+  - libsemanage-python
+
+- name: Test du service Selunix
+  command: getenforce
+  register: sestatus
+  changed_when: false

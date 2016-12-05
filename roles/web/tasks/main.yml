@@ -1,0 +1,14 @@
+---
+# tasks file for web
+- name: install php & git
+  yum: name={{item}} state=present
+  with_items:
+  - php
+  - php-mysql
+  - git
+
+- name: configure selinux to allow httpd to connect to remote database
+  seboolean: name=httpd_can_network_connect_db state=true persistent=yes
+
+- name: copy the repo code
+  git: repo={{repository}} version={{webapp_version}} dest=/var/www/html/  

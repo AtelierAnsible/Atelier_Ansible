@@ -1,0 +1,7 @@
+---
+# tasks file for commun
+- name: installation repository epel
+  yum: name=epel-release state=present
+
+- include: selinux.yml
+- include: ntp.yml

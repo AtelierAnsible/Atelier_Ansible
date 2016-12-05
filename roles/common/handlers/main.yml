@@ -1,0 +1,4 @@
+---
+# handlers file for commun
+- name: restart ntp
+  service: name=ntpd state=restarted

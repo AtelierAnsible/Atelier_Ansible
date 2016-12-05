@@ -1,0 +1,77 @@
+Prérequis
+1- Installation repo EPEL (fait)
+	[ansible11@DemoAnsible AtelierAnsible]$ yum repolist
+	Loaded plugins: fastestmirror, langpacks
+	Determining fastest mirrors
+	 * epel: ftp.nluug.nl
+	openlogic                                                                          54/54
+	repo id                repo name                                                   status
+	!base/7/x86_64         CentOS-7 - Base                                              9,007
+	!epel/x86_64           Extra Packages for Enterprise Linux 7 - x86_64              10,821
+	!extras/7/x86_64       CentOS-7 - Extras                                              393
+	!openlogic/7/x86_64    CentOS-7 - openlogic packages for x86_64                        54
+	!updates/7/x86_64      CentOS-7 - Updates                                           2,560
+	repolist: 22,835
+# La liste de tous les composants d'ansible installés sur la machine
+	rpm -ql ansible | more 
+2- Installation package ansible (fait)
+3- Création compte de déploiement autre que root (ansible) (fait)
+4- Installation clée ssh sur les serveurs cibles :
+	- Création de la clée ssh :
+	[ansible@DemoAnsible ~]$ ssh-keygen
+	Generating public/private rsa key pair.
+	Enter file in which to save the key (/home/ansible/.ssh/id_rsa):
+	Created directory '/home/ansible/.ssh'.
+	Enter passphrase (empty for no passphrase):
+	Enter same passphrase again:
+	Your identification has been saved in /home/ansible/.ssh/id_rsa.
+	Your public key has been saved in /home/ansible/.ssh/id_rsa.pub.
+	The key fingerprint is:
+	12:86:e8:62:ee:2d:61:95:b6:9f:db:c1:30:a7:58:fb ansible@DemoAnsible
+	The key's randomart image is:
+	---
+    - Copie de la clée 
+    [ansible11@DemoAnsible ~]$ ssh-copy-id ansible@52.178.38.126
+	The authenticity of host '52.178.38.126 (52.178.38.126)' can't be established.
+	ECDSA key fingerprint is 1a:6c:9b:64:0e:58:34:ef:c6:a8:9e:3e:04:53:20:84.
+	Are you sure you want to continue connecting (yes/no)? yes
+	/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+	/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+	ansible@52.178.38.126's password:
+
+	Number of key(s) added: 1
+
+	Now try logging into the machine, with:   "ssh 'ansible11@52.178.38.126'"
+	and check to make sure that only the key(s) you wanted were added.
+
+    - Test de connection :
+    [ansible11@DemoAnsible ~]$ ssh ansible11@52.178.38.126
+    [ansible11@AtelierAnsible ~]$
+
+5- Création du projet AtelierAnsible :
+    [ansible@DemoAnsible ~]$ mkdir AtelierAnsible
+    - Création fichier inventaire hosts / ou bien utiliser celui fourni par ansible (/etc/ansible/hosts)
+    [ansible@DemoAnsible ~]$ vi hosts
+    [webservers]
+    <@IP de votre server cible>
+
+    [dbservers]
+    <@IP de votre server cible>
+
+    - Création fichier de conf ansible (par défaut /etc/ansible/ansible.cfg)
+
+6- Test de connectivite (module ping)
+	[ansible@DemoAnsible ~]$ ansible webservers -m ping
+	52.178.38.126 | SUCCESS => {
+	    "changed": false,
+	    "ping": "pong"
+	}
+	- Test ping avec mot de passe (option -k)
+	[ansible@DemoAnsible ~]$ ansible webservers -m ping -k
+	SSH password:
+	52.178.38.126 | SUCCESS => {
+	    "changed": false,
+	    "ping": "pong"
+	}
+
+

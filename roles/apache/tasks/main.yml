@@ -1,0 +1,7 @@
+---
+# tasks file for apache
+- name: install apache
+  yum: name=httpd state=present
+  
+- name: ensure apache is running
+  service: name=httpd state=started enabled=yes

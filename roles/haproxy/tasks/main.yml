@@ -1,0 +1,11 @@
+---
+# tasks file for haproxy
+- name: install haproxy
+  yum: name=haproxy state=present
+
+- name: configure the haproxy cnf file
+  template: src=haproxy.cfg.j2 dest=/etc/haproxy/haproxy
+  notify: restarthaproxy
+
+- name: start the haproxy service
+  service: name=haproxy state=started enabled=yes

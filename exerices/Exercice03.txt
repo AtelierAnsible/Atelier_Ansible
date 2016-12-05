@@ -1,0 +1,74 @@
+Dans cette exercice nous allons installer une application web (apache, web, db, haprox)
+Créons notre espace de traivail : 
+Allez dans le repertoir Atelier Ansible et créeons le répertoire Roles:
+cd AtelierAnsible
+mkdir Roles
+Maintenat nous allons créer les roles nécessaires :
+Nous allons utiliser la commande ansible-galaxy init afin d'initialier les arborésences de nos roles:
+
+Pour comprendre l'usage de cette commande consulter le help :
+$ ansible-galaxy init --help
+
+Création des roels:
+$ ansible-galaxy init commun
+$ ansible-galaxy init apache
+$ ansible-galaxy init web
+$ ansible-galaxy init db
+$ ansible-galaxy init haproxy
+
+Paramétrer et adapter les les fichier main.yml
+
+Exécution de la playbook site.yml (installation des roles):
+
+--
+- name: configuration commune de tous les serveurs
+  hosts: all
+  remote_user: admin
+  become: yes
+
+  roles:
+  - common
+
+- name: configure & deploy database servers
+  hosts: dbservers
+  remote_user: admin
+  become: yes
+
+  roles:
+  - db
+
+- name: configure & deploy web servers
+  hosts: webervers
+  remote_user: admin
+  become: yes
+
+  roles:
+  - apache
+  - web
+
+- name: configure & deploy the load balancer 
+  hosts: lbservers
+  remote_user: admin
+  become: yes
+
+  roles:
+  - haproxy
+
+Lancement de la plypbook :
+$ ansible-playbook -i hosts site.yml
+
+Test de l'application :
+faire un (ps -aux | grep <le nom de service> ) afin de verifier la bonne installation des services.
+Intéroger l'application web depuis un browser : 
+http://10.42.0.6
+Hello World! ...
+
+Bravo votre app web a été déployer .. passons à l'exercice suivant ansible-vault.
+
+
+
+
+
+
+
+

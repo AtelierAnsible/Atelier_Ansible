@@ -1,0 +1,124 @@
+
+# Prérequis:
+Pour tester Cette exercice il vous vagrant & virtualbox installés sur vos machines (linux ou windows ou MacOS)
+
+# Création du projet :
+$ mkdir ansible-vagrant-docker ; cd ansible-vagrant-docker
+
+# Initialiser le projet
+$ vagrant init williamyeh/ubuntu-trusty64-docker
+# faire des modification si nécessaire dans le fichier de configurtaion Vagrantfile
+
+# Demarrer la VM vagrant
+$ vagrant up
+
+# connexion à la VM 
+$ vagrant ssh
+vagrant@ansible $
+
+==> Création de l'image Ansible <==
+# Afficher les images ansible dans le Docker Hub  :
+vagrant@ansible $ docker search ansible
+
+# Télécharger l'image ansible
+vagrant@ansible $ docker pull williamyeh/ansible:ubuntu14.04-onbuild
+
+# Démarrer & configurer le conteneur Ansible
+vagrant@ansible $ docker run --name ansible -it williamyeh/ansible:ubuntu14.04-onbuild /bin/bash
+
+# créer une clée public sur le conteneur docker
+root@7d76adf29a8f:/etc/ssh# ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa):
+Created directory '/root/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+ee:be:80:41:12:af:3e:96:ee:3e:75:c8:95:fc:4b:bb root@7d76adf29a8f
+The key's randomart image is:
++--[ RSA 2048]----+
+|  .              |
+|   o             |
+|  . o. .         |
+|   +  +          |
+|  ...o .S        |
+| . .+o..o        |
+|  =......o       |
+| o..   oo        |
+| o+.   .Eo       |
++-----------------+
+
+
+# Copie de la clée public vers le serveur vagrant 10.0.2.15
+root@7d76adf29a8f:~# ssh-copy-id vagrant@10.0.2.15
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+vagrant@10.0.2.15's password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'vagrant@10.0.2.15'"
+and check to make sure that only the key(s) you wanted were added.
+
+==> Acces à distance avec ansible
+
+root@7d76adf29a8f:~# ansible all -u vagrant -m shell -a "echo Welcome atelier Ansible CGI2016\! > atelier_ansible"
+10.0.2.15 | SUCCESS | rc=0 >>
+
+vagrant@localhost ~ $ cat atelier_ansible
+Welcome atelier Ansible CGI2016!
+
+== Mon premier Playbook :
+---
+# mon premier playbook utilise le module ping pour tester la connectivité de la mchine distante
+- name: Ping
+  hosts: 10.0.2.15
+  remote_user: vagrant
+  tasks:
+  - name: Ping
+    ping:
+  - name: echo
+    shell: echo Welcome.. atelier Ansible CT/CGI2016! > atelier_ansible
+
+root@7d76adf29a8f:~# ansible-playbook playbook.yml
+
+PLAY [Ping] ********************************************************************
+
+TASK [setup] *******************************************************************
+ok: [10.0.2.15]
+
+TASK [Ping] ********************************************************************
+ok: [10.0.2.15]
+
+TASK [echo] ********************************************************************
+changed: [10.0.2.15]
+
+PLAY RECAP *********************************************************************
+10.0.2.15                  : ok=3    changed=1    unreachable=0    failed=0
+
+Playbook avec un fichier inventaire hosts:
+root@7d76adf29a8f:~# vi /etc/ansible/hosts
+[vagrant_server]
+10.0.2.15
+
+# Mon second playbook
+root@7d76adf29a8f:~# cat playbook_hosts.yml
+# mon second playbook utilise le module ping pour tester la connectivitéde la machine distante avec un l'inventaire hosts
+
+- name: Ping
+  hosts: vagrant_server
+  remote_user: vagrant
+  tasks:
+  - name: Ping
+    ping:
+  - name: echo
+    shell: echo Welcome atelier Ansible CGI2016! > atelier_ansible
+
+
+
+root@7d76adf29a8f:~# ansible-playbook -i /etc/ansible/hosts playbook_hosts.yml
+
+PLAY RECAP *********************************************************************
+10.0.2.15                  : ok=3    changed=1    unreachable=0    failed=0
