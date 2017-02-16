@@ -1,6 +1,9 @@
----- hosts: webservers  
+---- 
+hosts: webservers  
 remote_user: ansible  
 vars:    hello: 'Welcome to Atelier Ansible'  
 tasks:    
 - name: Welcome      
-copy:        dest: /tmp/hello        content: "{{ hello }}"
+        copy:        
+        dest: /tmp/hello        
+        content: "{{ hello }}"
